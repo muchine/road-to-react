@@ -31,42 +31,26 @@ class App extends Component {
     
     render() {
         const message = 'Welcome to the Road to learn React!!';
+        const {
+            articles,
+            searchTerm
+        } = this.state;
         
         return (
             <div className="App">
                 <h2>{message}</h2>
-                <form>
-                    <input type="text" onChange={this.onSearchChange}/>
-                </form>
-                {this.renderItems()}
+                <Search
+                    value={searchTerm}
+                    onChange={this.onSearchChange}
+                />
+                <Table
+                    items={articles}
+                    pattern={searchTerm}
+                    onDismiss={this.onDismiss}
+                />
             </div>
         );
     }
-    
-    renderItems = () => {
-        return this.state.articles
-            .filter(item => this.isSearchedItem(item))
-            .map(item =>
-                <div key={item.objectId}>
-                    <span>
-                        <a href={item.url}>{item.title}</a>
-                    </span>
-                        <span>{item.author}</span>
-                        <span>{item.commentCount}</span>
-                        <span>{item.points}</span>
-                        <span>
-                        <button onClick={() => this.onDismiss(item.objectId)} type="button">
-                            Dismiss
-                        </button>
-                    </span>
-                </div>
-            );
-    };
-    
-    isSearchedItem = (item) => {
-        const keyword = this.state.searchTerm;
-        return item.title.toLowerCase().includes(keyword.toLowerCase());
-    };
     
     onSearchChange = (event) => {
         this.setState({
@@ -77,6 +61,59 @@ class App extends Component {
     onDismiss = (objectId) => {
         const updated = this.state.articles.filter(item => item.objectId !== objectId);
         this.setState({articles: updated});
+    };
+}
+
+class Search extends Component {
+    render() {
+        const {value, onChange} = this.props;
+        return (
+            <form>
+                <input
+                    type="text"
+                    value={value}
+                    onChange={onChange}
+                />
+            </form>
+        )
+    }
+}
+
+class Table extends Component {
+    
+    render() {
+        return (
+            <div>
+                {this.renderItems(this.props.items)}
+            </div>
+        )
+    }
+    
+    renderItems = (items) => {
+        return items
+            .filter(item => this.isSearchedItem(item))
+            .map(item =>
+                <div key={item.objectId}>
+                    <span>
+                        <a href={item.url}>{item.title}</a>
+                    </span>
+                    <span>{item.author}</span>
+                    <span>{item.commentCount}</span>
+                    <span>{item.points}</span>
+                    <span>
+                        <button
+                            type="button"
+                            onClick={() => this.props.onDismiss(item.objectId)}>
+                            Dismiss
+                        </button>
+                    </span>
+                </div>
+            );
+    };
+    
+    isSearchedItem = (item) => {
+        const keyword = this.props.pattern;
+        return item.title.toLowerCase().includes(keyword.toLowerCase());
     };
 }
 
