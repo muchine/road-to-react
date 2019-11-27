@@ -40,7 +40,8 @@ class App extends Component {
         this.state = {
             responses: {},
             searchKey: '',
-            searchTerm: DEFAULT_QUERY
+            searchTerm: DEFAULT_QUERY,
+            error: null
         };
     }
     
@@ -49,6 +50,7 @@ class App extends Component {
             responses,
             searchTerm,
             searchKey,
+            error
         } = this.state;
         
         const response = responses[searchKey];
@@ -66,11 +68,17 @@ class App extends Component {
                         Search
                     </Search>
                 </div>
-                <Table
-                    items={items}
-                    pattern={searchTerm}
-                    onDismiss={this.onDismiss}
-                />
+                { error ?
+                    <div className="interactions">
+                        <p>Something went wrong.</p>
+                    </div>
+                    :
+                    <Table
+                        items={items}
+                        pattern={searchTerm}
+                        onDismiss={this.onDismiss}
+                    />
+                }
                 <div className="interactions">
                     <Button onClick={() => this.fetchStories(searchKey, page + 1)}>
                         More
@@ -90,7 +98,7 @@ class App extends Component {
         fetch(`${PATH_BASE}/search?query=${query}&page=${page}&hitsPerPage=10`)
             .then(response => response.json())
             .then(result => this.onFetchedItems(result))
-            .catch(error => error);
+            .catch(error => this.setState({ error }));
     };
     
     onFetchedItems = (result) => {
