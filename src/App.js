@@ -1,24 +1,6 @@
 import React, {Component} from 'react';
 import './App.css';
 
-const articles = [
-    {
-        title: 'React',
-        url: 'https://reactjs.org',
-        author: 'Jordan Walke',
-        commentCount: 3,
-        points: 4,
-        objectId: 0
-    }, {
-        title: 'Redux',
-        url: 'https://redux.js.org',
-        author: 'Dan Abramov, Andrew Clark',
-        commentCount: 2,
-        points: 5,
-        objectId: 1
-    }
-];
-
 const columnSize = {
     large: {width: '40%'},
     mid: {width: '30%'},
@@ -30,7 +12,8 @@ const DEFAULT_QUERY = 'redux';
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
-const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
+const PARAM_PAGE = 'page=';
+const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}&${PARAM_PAGE}`;
 console.log(url);
 
 class Item {
@@ -43,23 +26,34 @@ class Item {
     }
 }
 
+class Response {
+    constructor(items, page) {
+        this.items = items;
+        this.page = page;
+    }
+}
+
 class App extends Component {
     
     constructor(props) {
         super(props);
         this.state = {
-            items: [],
+            responses: {},
+            searchKey: '',
             searchTerm: DEFAULT_QUERY
         };
     }
     
     render() {
         const {
-            items,
-            searchTerm
+            responses,
+            searchTerm,
+            searchKey,
         } = this.state;
         
-        console.log(items[0]);
+        const response = responses[searchKey];
+        const page = response ? response.page : 0;
+        const items = response ? response.items : [];
         
         return (
             <div className="page">
@@ -72,40 +66,57 @@ class App extends Component {
                         Search
                     </Search>
                 </div>
-                {items &&
                 <Table
                     items={items}
                     pattern={searchTerm}
                     onDismiss={this.onDismiss}
                 />
-                }
+                <div className="interactions">
+                    <Button onClick={() => this.fetchStories(searchKey, page + 1)}>
+                        More
+                    </Button>
+                </div>
             </div>
         );
     }
     
     componentDidMount() {
-        this.fetchStories();
+        const {searchTerm} = this.state;
+        this.setState({searchKey: searchTerm});
+        this.fetchStories(searchTerm);
     }
     
-    fetchStories = () => {
-        const {searchTerm} = this.state;
-        fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+    fetchStories = (query, page = 0) => {
+        fetch(`${PATH_BASE}/search?query=${query}&page=${page}&hitsPerPage=10`)
             .then(response => response.json())
-            .then(result => this.onFetchedItems(result.hits))
+            .then(result => this.onFetchedItems(result))
             .catch(error => error);
     };
     
-    onFetchedItems = (fetchedItems) => {
-        const items = fetchedItems.map(item =>
-            new Item(item.objectID, item.title, item.author, item.num_comments, item.points)
-        );
+    onFetchedItems = (result) => {
+        const {hits, page} = result;
+        const items = hits.map(item => new Item(item.objectID, item.title, item.author, item.num_comments, item.points));
         
-        this.setState({items: items});
+        const {searchKey, responses} = this.state;
+        const updated = [
+            ...(responses[searchKey] ? responses[searchKey].items : []),
+            ...items
+        ];
+        
+        this.setState({
+            responses: {
+                ...responses,
+                [searchKey]: new Response(updated, page)
+            }
+        });
     };
     
     onClickSearch = (event) => {
-        this.fetchStories();
+        const {searchTerm, responses} = this.state;
+        this.setState({searchKey: searchTerm});
+        
         event.preventDefault();
+        if (!responses[searchTerm]) this.fetchStories(searchTerm);
     };
     
     onChangedSearchTerm = (event) => {
@@ -115,8 +126,16 @@ class App extends Component {
     };
     
     onDismiss = (id) => {
-        const updated = this.state.items.filter(item => item.id !== id);
-        this.setState({items: updated});
+        const {searchKey, responses} = this.state;
+        const response = responses[searchKey];
+        const updated = response.items.filter(item => item.id !== id);
+        
+        this.setState({
+            responses: {
+                ...responses,
+                [searchKey]: new Response(updated, response.page)
+            }
+        });
     };
 }
 
