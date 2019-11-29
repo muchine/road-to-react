@@ -16,6 +16,16 @@ const PARAM_PAGE = 'page=';
 const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}&${PARAM_PAGE}`;
 console.log(url);
 
+const Loading = () =>
+    <div>Loading...</div>
+
+const withLoading = (Component) => ({isLoading, ...rest}) => {
+    if (isLoading) return <Loading/>;
+    return <Component {...rest}/>;
+};
+
+const ButtonWithLoading = withLoading(Button);
+
 class Response {
     constructor(items, page) {
         this.items = items;
@@ -31,7 +41,8 @@ class App extends Component {
             responses: {},
             searchKey: '',
             searchTerm: DEFAULT_QUERY,
-            error: null
+            error: null,
+            isLoading: false
         };
     }
     
@@ -40,7 +51,8 @@ class App extends Component {
             responses,
             searchTerm,
             searchKey,
-            error
+            error,
+            isLoading
         } = this.state;
         
         const response = responses[searchKey];
@@ -70,9 +82,12 @@ class App extends Component {
                     />
                 }
                 <div className="interactions">
-                    <Button onClick={() => this.fetchStories(searchKey, page + 1)}>
+                    <ButtonWithLoading
+                        isLoading={isLoading}
+                        onClick={() => this.fetchStories(searchKey, page + 1)}
+                    >
                         More
-                    </Button>
+                    </ButtonWithLoading>
                 </div>
             </div>
         );
@@ -85,12 +100,20 @@ class App extends Component {
     }
     
     fetchStories = (query, page = 0) => {
+        this.setState({isLoading: true});
         axios.get(`${PATH_BASE}/search?query=${query}&page=${page}&hitsPerPage=10`)
-            .then(result => this.onFetchedItems(result.data))
-            .catch(error => this.setState({error}));
+            .then(result => this.onFetchSuccess(result.data))
+            .catch(error => this.onFetchError(error));
     };
     
-    onFetchedItems = (result) => {
+    onFetchError = (error) => {
+        this.setState({
+            error: error,
+            isLoading: false
+        })
+    };
+    
+    onFetchSuccess = (result) => {
         const {hits, page} = result;
         const items = hits.map(item => new Item(item.objectID, item.title, item.author, item.num_comments, item.points));
         
@@ -104,7 +127,8 @@ class App extends Component {
             responses: {
                 ...responses,
                 [searchKey]: new Response(updated, page)
-            }
+            },
+            isLoading: false
         });
     };
     

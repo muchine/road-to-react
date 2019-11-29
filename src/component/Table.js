@@ -3,6 +3,7 @@ import Button from './Button';
 import Item from 'model/Item';
 import Enzyme from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
+import PropTypes from 'prop-types';
 
 Enzyme.configure({adapter: new Adapter()});
 
@@ -47,5 +48,10 @@ class Table extends Component<Props> {
             );
     };
 }
+
+// Table.propTypes = {
+// //     items: PropTypes.arrayOf(PropTypes.objectOf(Item)),
+// //     onDismiss: PropTypes.func.isRequired
+// // };
 
 export default Table;
