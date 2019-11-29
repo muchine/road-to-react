@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
+import Button from "./component/Button";
+import Table from "./component/Table";
+import Search from "./component/Search";
+import Item from "./model/Item";
+import axios from 'axios';
+import PropTypes from 'prop-types';
 import './App.css';
-
-const columnSize = {
-    large: {width: '40%'},
-    mid: {width: '30%'},
-    small: {width: '10%'}
-};
 
 const DEFAULT_QUERY = 'redux';
 
@@ -15,16 +15,6 @@ const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
 const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}&${PARAM_PAGE}`;
 console.log(url);
-
-class Item {
-    constructor(id, title, author, commentCount, points) {
-        this.id = id;
-        this.title = title;
-        this.author = author;
-        this.commentCount = commentCount;
-        this.points = points;
-    }
-}
 
 class Response {
     constructor(items, page) {
@@ -68,7 +58,7 @@ class App extends Component {
                         Search
                     </Search>
                 </div>
-                { error ?
+                {error ?
                     <div className="interactions">
                         <p>Something went wrong.</p>
                     </div>
@@ -95,10 +85,9 @@ class App extends Component {
     }
     
     fetchStories = (query, page = 0) => {
-        fetch(`${PATH_BASE}/search?query=${query}&page=${page}&hitsPerPage=10`)
-            .then(response => response.json())
-            .then(result => this.onFetchedItems(result))
-            .catch(error => this.setState({ error }));
+        axios.get(`${PATH_BASE}/search?query=${query}&page=${page}&hitsPerPage=10`)
+            .then(result => this.onFetchedItems(result.data))
+            .catch(error => this.setState({error}));
     };
     
     onFetchedItems = (result) => {
@@ -145,69 +134,6 @@ class App extends Component {
             }
         });
     };
-}
-
-const Search = ({value, onChange, onSubmit, children}) =>
-    <form onSubmit={onSubmit}>
-        <input
-            type="text"
-            value={value}
-            onChange={onChange}
-        />
-        <button type="submit">
-            {children}
-        </button>
-    </form>;
-
-class Table extends Component {
-    render() {
-        return (
-            <div className="table">
-                {this.renderItems(this.props.items)}
-            </div>
-        )
-    }
-    
-    renderItems = (items) => {
-        return items
-            .map(item =>
-                <div key={item.id} className="table-row">
-                    <span style={columnSize.large}>
-                        <a href={item.url}>{item.title}</a>
-                    </span>
-                    <span style={columnSize.mid}>{item.author}</span>
-                    <span style={columnSize.small}>{item.commentCount}</span>
-                    <span style={columnSize.small}>{item.points}</span>
-                    <span style={columnSize.small}>
-                        <Button
-                            className="button-inline"
-                            onClick={() => this.props.onDismiss(item.id)}
-                        >
-                            Dismiss
-                        </Button>
-                    </span>
-                </div>
-            );
-    };
-}
-
-class Button extends Component {
-    render() {
-        const {
-            onClick,
-            className = '',
-            children
-        } = this.props;
-        
-        return (
-            <button
-                onClick={onClick}
-                className={className}
-                type="button">
-                {children}
-            </button>
-        )
-    }
 }
 
 export default App;
