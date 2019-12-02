@@ -4,7 +4,6 @@ import Table from "./component/Table";
 import Search from "./component/Search";
 import Item from "./model/Item";
 import axios from 'axios';
-import PropTypes from 'prop-types';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
@@ -17,7 +16,7 @@ const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}&${PARAM_
 console.log(url);
 
 const Loading = () =>
-    <div>Loading...</div>
+    <div>Loading...</div>;
 
 const withLoading = (Component) => ({isLoading, ...rest}) => {
     if (isLoading) return <Loading/>;
@@ -42,7 +41,9 @@ class App extends Component {
             searchKey: '',
             searchTerm: DEFAULT_QUERY,
             error: null,
-            isLoading: false
+            isLoading: false,
+            sortKey: 'NONE',
+            isSortReverse: false
         };
     }
     
@@ -52,7 +53,9 @@ class App extends Component {
             searchTerm,
             searchKey,
             error,
-            isLoading
+            isLoading,
+            sortKey,
+            isSortReverse
         } = this.state;
         
         const response = responses[searchKey];
@@ -78,6 +81,9 @@ class App extends Component {
                     <Table
                         items={items}
                         pattern={searchTerm}
+                        sortKey={sortKey}
+                        onSort={this.onSort}
+                        isSortReverse = {isSortReverse}
                         onDismiss={this.onDismiss}
                     />
                 }
@@ -157,6 +163,11 @@ class App extends Component {
                 [searchKey]: new Response(updated, response.page)
             }
         });
+    };
+    
+    onSort = (sortKey) => {
+        const isSortReverse = this.state.sortKey == sortKey && !this.state.isSortReverse;
+        this.setState({sortKey, isSortReverse});
     };
 }
 

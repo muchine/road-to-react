@@ -13,7 +13,9 @@ describe('Table', () => {
         items: [
             new Item('y', '1', '1', 1, 2),
             new Item('z', '1', '1', 1, 2),
-        ]
+        ],
+        sortKey: 'TITLE',
+        isSortReverse: false
     };
     
     it('renders without crashing', () => {
