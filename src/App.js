@@ -41,9 +41,7 @@ class App extends Component {
             searchKey: '',
             searchTerm: DEFAULT_QUERY,
             error: null,
-            isLoading: false,
-            sortKey: 'NONE',
-            isSortReverse: false
+            isLoading: false
         };
     }
     
@@ -53,9 +51,7 @@ class App extends Component {
             searchTerm,
             searchKey,
             error,
-            isLoading,
-            sortKey,
-            isSortReverse
+            isLoading
         } = this.state;
         
         const response = responses[searchKey];
@@ -81,9 +77,6 @@ class App extends Component {
                     <Table
                         items={items}
                         pattern={searchTerm}
-                        sortKey={sortKey}
-                        onSort={this.onSort}
-                        isSortReverse = {isSortReverse}
                         onDismiss={this.onDismiss}
                     />
                 }
@@ -119,23 +112,27 @@ class App extends Component {
         })
     };
     
-    onFetchSuccess = (result) => {
-        const {hits, page} = result;
-        const items = hits.map(item => new Item(item.objectID, item.title, item.author, item.num_comments, item.points));
-        
-        const {searchKey, responses} = this.state;
+    updateWithFetchedResponses = (items, page) => (prevState) => {
+        const {searchKey, responses} = prevState;
         const updated = [
             ...(responses[searchKey] ? responses[searchKey].items : []),
             ...items
         ];
-        
-        this.setState({
+    
+        return {
             responses: {
                 ...responses,
                 [searchKey]: new Response(updated, page)
             },
             isLoading: false
-        });
+        }
+    };
+    
+    onFetchSuccess = (result) => {
+        const {hits, page} = result;
+        const items = hits.map(item => new Item(item.objectID, item.title, item.author, item.num_comments, item.points));
+        
+        this.setState(this.updateWithFetchedResponses(items, page));
     };
     
     onClickSearch = (event) => {
@@ -163,11 +160,6 @@ class App extends Component {
                 [searchKey]: new Response(updated, response.page)
             }
         });
-    };
-    
-    onSort = (sortKey) => {
-        const isSortReverse = this.state.sortKey == sortKey && !this.state.isSortReverse;
-        this.setState({sortKey, isSortReverse});
     };
 }
 

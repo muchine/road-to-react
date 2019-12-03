@@ -34,7 +34,7 @@ const SORTS = {
 const Sort = ({sortKey, onSort, activeSortKey, children}) => {
     const sortClass = classNames(
         'button-inline',
-        { 'button-active': sortKey === activeSortKey}
+        {'button-active': sortKey === activeSortKey}
     );
     
     return (
@@ -57,12 +57,26 @@ const SortCell = ({style, sortKey, onSort, activeSortKey, children}) =>
     </span>;
 
 class Table extends Component<Props> {
+    constructor(props) {
+        super(props);
+        this.state = {
+            sortKey: 'NONE',
+            isSortReverse: false
+        };
+    }
+    
+    onSort = (sortKey) => {
+        const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
+        this.setState({sortKey, isSortReverse});
+    };
+    
     render() {
-        const {items, sortKey, onSort, isSortReverse} = this.props;
+        const {items} = this.props;
+        const {sortKey, isSortReverse} = this.state;
         const sorted = SORTS[sortKey](items);
         return (
             <div className="table">
-                {this.renderHeader(onSort, sortKey)}
+                {this.renderHeader(this.onSort, sortKey)}
                 {this.renderItems(isSortReverse ? sorted.reverse() : sorted)}
             </div>
         )
@@ -71,9 +85,12 @@ class Table extends Component<Props> {
     renderHeader = (onSort, sortKey) =>
         <div className='table-header'>
             <SortCell style={{width: '40%'}} sortKey={'TITLE'} onSort={onSort} activeSortKey={sortKey}>Title</SortCell>
-            <SortCell style={{width: '30%'}} sortKey={'AUTHOR'} onSort={onSort} activeSortKey={sortKey}>Author</SortCell>
-            <SortCell style={{width: '10%'}} sortKey={'COMMENTS'} onSort={onSort} activeSortKey={sortKey}>Comments</SortCell>
-            <SortCell style={{width: '10%'}} sortKey={'POINTS'} onSort={onSort} activeSortKey={sortKey}>Points</SortCell>
+            <SortCell style={{width: '30%'}} sortKey={'AUTHOR'} onSort={onSort}
+                      activeSortKey={sortKey}>Author</SortCell>
+            <SortCell style={{width: '10%'}} sortKey={'COMMENTS'} onSort={onSort}
+                      activeSortKey={sortKey}>Comments</SortCell>
+            <SortCell style={{width: '10%'}} sortKey={'POINTS'} onSort={onSort}
+                      activeSortKey={sortKey}>Points</SortCell>
             <span style={{width: '10%'}}>
                 Archive
             </span>
